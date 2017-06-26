@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+          integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+        integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+          integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+          crossorigin="anonymous"></script>
+
+  <script language="JavaScript" type="text/javascript" src="js/jsbn.js"></script>
+  <script language="JavaScript" type="text/javascript" src="js/prng4.js"></script>
+  <script language="JavaScript" type="text/javascript" src="js/rng.js"></script>
+  <script language="JavaScript" type="text/javascript" src="js/rsa.js"></script>
+  <script language="JavaScript" type="text/javascript" src="js/base64.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      handshake();
+
+      $('#btnSubmit').click(function () {
+        var publicKeyModulus = $('#publicKeyModulus').text();
+        var publicKeyExponent = $('#publicKeyExponent').text();
+        var rsa = new RSAKey();
+        rsa.setPublic(publicKeyModulus, publicKeyExponent);
+
+        var plainText = $('#plainText').val();
+        var encrypted = rsa.encrypt(plainText);
+        console.log(encrypted);
+        $.ajax({
+          method: 'POST',
+          url: 'http://localhost:8080/decrypt',
+          data: {
+            'publicKey': publicKeyModulus,
+            'encrypted': encrypted
+          },
+          success: function(data){
+            alert('success!' + '\n' + data);
+          },
+          error: function (request, status, error) {
+            alert(error);
+          }
+        })
+
+      });
+    });
+
+    var handshake = function () {
+      $.ajax({
+        method: 'GET',
+        url: 'http://localhost:8080/exchange',
+        contentType: 'application/json; charset=UTF-8',
+        data: {},
+        success: function (data) {
+          $('#publicKeyModulus').text(data.publicKeyModulus);
+          $('#publicKeyExponent').text(data.publicKeyExponent);
+        },
+        error: function (request, status, error) {
+          alert(error);
+        }
+      });
+    }
+  </script>
+</head>
+<body>
+<div class="container">
+  <h3>Public Key</h3>
+  <p id="publicKeyModulus"></p>
+  <p id="publicKeyExponent"></p>
+</div>
+
+<div class="container">
+  <h3>Input your text</h3>
+  <input type="text" id="plainText" title="Plain Text"/>
+  <button id="btnSubmit" class="btn btn-primary">Submit</button>
+</div>
+</body>
+</html>
